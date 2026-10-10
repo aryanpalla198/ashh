@@ -93,6 +93,8 @@
 
 html, body {
   height: 100%;
+  height: 100dvh;
+  width: 100%;
   font-family: var(--font-sans);
   background-color: var(--bg-app);
   color: var(--text-primary);
@@ -106,8 +108,10 @@ html, body {
 /* Main Layout */
 .app-layout {
   display: flex;
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
   overflow: hidden;
   position: relative;
 }
@@ -118,7 +122,8 @@ html, body {
 
 .sidebar {
   width: var(--sidebar-width);
-  height: 100vh;
+  height: 100%;
+  height: 100dvh;
   background-color: var(--bg-sidebar);
   border-right: 1px solid var(--border-subtle);
   display: flex;
@@ -467,10 +472,14 @@ html, body {
    ========================================================================== */
 
 .main-view {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
+  height: 100dvh;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
   background-color: var(--bg-app);
   overflow: hidden;
   position: relative;
@@ -594,8 +603,10 @@ html, body {
    ========================================================================== */
 
 .chat-area {
-  flex: 1;
+  flex: 1 1 0%;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   padding: 24px 20px;
@@ -926,8 +937,14 @@ html, body {
    ========================================================================== */
 
 .composer-container {
-  padding: 14px 20px 20px;
-  background: linear-gradient(to top, var(--bg-app) 80%, transparent);
+  flex-shrink: 0;
+  width: 100%;
+  padding: 12px 20px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  background-color: var(--bg-app);
+  border-top: 1px solid var(--border-subtle);
+  position: relative;
+  z-index: 60;
 }
 
 .composer-form {
@@ -1568,13 +1585,23 @@ html, body {
     display: inline-flex;
   }
 
+  .app-layout {
+    height: 100%;
+    height: 100dvh;
+    width: 100%;
+    max-width: 100vw;
+    overflow: hidden;
+  }
+
   .sidebar {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
+    width: min(300px, 86vw);
     transform: translateX(-100%);
     box-shadow: var(--shadow-lg);
+    z-index: 1000;
   }
 
   .sidebar.open {
@@ -1584,8 +1611,8 @@ html, body {
   .sidebar-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 90;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 900;
     display: none;
   }
 
@@ -1593,11 +1620,159 @@ html, body {
     display: block;
   }
 
+  .main-view {
+    height: 100%;
+    height: 100dvh;
+    min-height: 0;
+    width: 100%;
+    max-width: 100vw;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: 48px;
+    padding: 0 10px;
+    flex-shrink: 0;
+  }
+
   .chat-title {
-    max-width: 160px;
+    max-width: 130px;
+    font-size: 15px;
+  }
+
+  .topbar-right {
+    gap: 6px;
+  }
+
+  .btn-pill {
+    padding: 4px 8px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+
+  .chat-area {
+    flex: 1 1 0%;
+    min-height: 0;
+    padding: 10px 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .welcome-hero {
+    padding: 12px 6px;
+    margin: 4px auto auto;
+    max-width: 100%;
+  }
+
+  .welcome-heading {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+
+  .welcome-sub {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .welcome-detail {
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+
+  .welcome-prompts {
+    gap: 6px;
+  }
+
+  .prompt-chip {
+    padding: 5px 9px;
+    font-size: 11.5px;
   }
 
   .messages-container {
-    padding: 0 4px;
+    padding: 0 2px;
+    gap: 16px;
+  }
+
+  .message-bubble-user {
+    max-width: 90%;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .message-bubble-assistant {
+    font-size: 14px;
+  }
+
+  /* Fixed & Visible Mobile Composer */
+  .composer-container {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    z-index: 70 !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+    padding: 8px 10px !important;
+    padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    background-color: var(--bg-app) !important;
+    border-top: 1px solid var(--border-subtle) !important;
+  }
+
+  .composer-form {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .composer-box {
+    padding: 8px 10px 6px !important;
+    gap: 6px !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  #composer-input {
+    font-size: 14px !important;
+    min-height: 24px !important;
+    max-height: 90px !important;
+    padding: 2px 0 !important;
+  }
+
+  .composer-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+  }
+
+  .composer-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  #btn-attach-composer {
+    display: inline-flex !important;
+    visibility: visible !important;
+    width: 34px !important;
+    height: 34px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .char-counter {
+    font-size: 10px !important;
+  }
+
+  .composer-buttons {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .btn-send {
+    display: flex !important;
+    visibility: visible !important;
+    width: 34px !important;
+    height: 34px !important;
+    flex-shrink: 0 !important;
   }
 }

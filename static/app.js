@@ -1249,7 +1249,8 @@
 
   function updateComposerHeight() {
     el.composerInput.style.height = 'auto';
-    el.composerInput.style.height = Math.min(el.composerInput.scrollHeight, 180) + 'px';
+    const maxHeight = window.innerWidth <= 768 ? 90 : 180;
+    el.composerInput.style.height = Math.min(el.composerInput.scrollHeight, maxHeight) + 'px';
   }
 
   function updateCharCounter() {
