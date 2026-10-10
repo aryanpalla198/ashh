@@ -18,6 +18,7 @@ from app import llm
 from app.schemas import (
     DocumentMetadata,
     DocumentUploadResponse,
+    TextDocumentCreate,
     ChatCreate,
     ChatUpdate,
     ChatResponse,
@@ -116,6 +117,20 @@ async def upload_documents(files: List[UploadFile] = File(...)):
         skipped_empty_pages=skipped_empty_pages_map,
         message=msg
     )
+
+@app.post("/api/documents/text", response_model=DocumentMetadata)
+def upload_text_document(payload: TextDocumentCreate):
+    """
+    Ingests raw typed or pasted text directly as a document.
+    """
+    try:
+        doc_meta, is_dup = ingest.ingest_raw_text(payload.content, payload.name)
+        return doc_meta
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to ingest text document: {str(e)}"
+        )
 
 @app.get("/api/documents", response_model=List[DocumentMetadata])
 def list_documents():

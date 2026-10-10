@@ -16,6 +16,10 @@ class DocumentUploadResponse(BaseModel):
     skipped_empty_pages: Dict[str, List[int]] = {}
     message: str
 
+class TextDocumentCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+    content: str = Field(..., min_length=1)
+
 # Chat Schemas
 class ChatCreate(BaseModel):
     title: Optional[str] = None

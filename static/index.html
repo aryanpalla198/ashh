@@ -106,6 +106,12 @@
             <input type="file" id="file-input" accept=".pdf" multiple class="sr-only">
           </div>
 
+          <!-- Type or Paste Raw Text as Document -->
+          <button id="btn-open-paste-modal" class="btn-paste-action" type="button" aria-label="Type or paste document text">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            <span>+ Type / Paste Text</span>
+          </button>
+
           <!-- Document List -->
           <div id="document-list" class="document-list">
             <div id="doc-skeletons" class="skeleton-list">
@@ -221,17 +227,31 @@
       <!-- Composer Bar -->
       <footer class="composer-container">
         <form id="composer-form" class="composer-form">
-          <div class="composer-box">
+          <div class="composer-box" id="composer-box">
+            <!-- Attached File Badges Tray -->
+            <div id="composer-attachments" class="composer-attachments hidden"></div>
+
             <textarea
               id="composer-input"
               rows="1"
-              placeholder="Ask Ashh about your documents... (Shift+Enter for newline)"
+              placeholder="Ask a question, or attach a document & type your prompt... (Shift+Enter for newline)"
               maxlength="4000"
               aria-label="Message input"
             ></textarea>
             
             <div class="composer-actions">
               <div class="composer-meta">
+                <button
+                  type="button"
+                  id="btn-attach-composer"
+                  class="btn-icon"
+                  aria-label="Attach PDF file"
+                  title="Attach document to this question"
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                </button>
+                <input type="file" id="composer-file-input" accept=".pdf" multiple class="sr-only">
+
                 <span id="char-counter" class="char-counter">0 / 4000</span>
                 <span id="streaming-notice" class="streaming-notice hidden">Generating response...</span>
               </div>
@@ -381,6 +401,31 @@
       <div class="modal-footer">
         <button id="btn-rename-cancel" class="btn-secondary">Cancel</button>
         <button id="btn-rename-save" class="btn-primary">Save Title</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Type or Paste Document Modal -->
+  <div id="paste-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="paste-modal-title">
+    <div class="modal-backdrop" id="paste-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="paste-modal-title" class="modal-title">Type or Paste Document</h3>
+        <button id="btn-close-paste" class="btn-icon" aria-label="Cancel">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-group">
+          <label for="paste-doc-title" class="setting-label">Document Title</label>
+          <input type="text" id="paste-doc-title" class="text-input" placeholder="e.g. Project Specs, Meeting Notes, Contract Draft" maxlength="120">
+        </div>
+        <div class="settings-group">
+          <label for="paste-doc-content" class="setting-label">Content / Text</label>
+          <textarea id="paste-doc-content" class="text-input paste-textarea" rows="8" placeholder="Paste or type raw document text here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-paste-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-paste-save" class="btn-primary">Add Document</button>
       </div>
     </div>
   </div>

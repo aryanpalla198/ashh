@@ -27,7 +27,8 @@
     theme: 'light',
     isGenerating: false,
     abortController: null,
-    pendingDeleteAction: null
+    pendingDeleteAction: null,
+    attachedFiles: [] // Array of File objects attached directly in composer
   };
 
   // DOM Elements
@@ -61,6 +62,7 @@
     // Documents
     dropzone: document.getElementById('dropzone'),
     fileInput: document.getElementById('file-input'),
+    btnOpenPasteModal: document.getElementById('btn-open-paste-modal'),
     documentList: document.getElementById('document-list'),
     docSkeletons: document.getElementById('doc-skeletons'),
     docEmptyState: document.getElementById('doc-empty-state'),
@@ -73,7 +75,11 @@
 
     // Composer
     composerForm: document.getElementById('composer-form'),
+    composerBox: document.getElementById('composer-box'),
+    composerAttachments: document.getElementById('composer-attachments'),
     composerInput: document.getElementById('composer-input'),
+    btnAttachComposer: document.getElementById('btn-attach-composer'),
+    composerFileInput: document.getElementById('composer-file-input'),
     btnSend: document.getElementById('btn-send'),
     btnStopGenerating: document.getElementById('btn-stop-generating'),
     charCounter: document.getElementById('char-counter'),
@@ -121,6 +127,13 @@
     btnRenameCancel: document.getElementById('btn-rename-cancel'),
     btnRenameSave: document.getElementById('btn-rename-save'),
     btnCloseRename: document.getElementById('btn-close-rename'),
+
+    pasteModal: document.getElementById('paste-modal'),
+    pasteDocTitle: document.getElementById('paste-doc-title'),
+    pasteDocContent: document.getElementById('paste-doc-content'),
+    btnClosePaste: document.getElementById('btn-close-paste'),
+    btnPasteCancel: document.getElementById('btn-paste-cancel'),
+    btnPasteSave: document.getElementById('btn-paste-save'),
 
     toastContainer: document.getElementById('toast-container')
   };
@@ -832,14 +845,100 @@
   }
 
   // -------------------------------------------------------------
-  // Message Sending & SSE Streaming
+  // Composer Attachments & Message Sending
   // -------------------------------------------------------------
+
+  function addComposerAttachment(file) {
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      showToast(`"${file.name}" rejected: Only PDF files can be attached.`, 'error');
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      showToast(`"${file.name}" rejected: Exceeds 25 MB limit.`, 'error');
+      return;
+    }
+    if (state.attachedFiles.some(f => f.name === file.name && f.size === file.size)) {
+      return;
+    }
+    state.attachedFiles.push(file);
+    renderComposerAttachments();
+    updateCharCounter();
+  }
+
+  function removeComposerAttachment(index) {
+    state.attachedFiles.splice(index, 1);
+    renderComposerAttachments();
+    updateCharCounter();
+  }
+
+  function renderComposerAttachments() {
+    if (state.attachedFiles.length === 0) {
+      el.composerAttachments.classList.add('hidden');
+      el.composerAttachments.innerHTML = '';
+      return;
+    }
+    el.composerAttachments.classList.remove('hidden');
+    el.composerAttachments.innerHTML = '';
+
+    state.attachedFiles.forEach((file, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'attachment-chip';
+      const sizeKb = Math.round(file.size / 1024);
+      chip.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="attachment-chip-name" title="${file.name}">${file.name}</span>
+        <span class="attachment-chip-size">(${sizeKb} KB)</span>
+        <button type="button" class="attachment-chip-remove" aria-label="Remove attachment">✕</button>
+      `;
+      chip.querySelector('.attachment-chip-remove').onclick = () => removeComposerAttachment(idx);
+      el.composerAttachments.appendChild(chip);
+    });
+  }
+
+  async function savePastedDocument() {
+    const title = el.pasteDocTitle.value.trim();
+    const content = el.pasteDocContent.value.trim();
+    if (!title) {
+      showToast('Please enter a document title', 'error');
+      return;
+    }
+    if (!content) {
+      showToast('Please enter document text content', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/documents/text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: title, content: content })
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.detail || 'Ingestion failed');
+      }
+      const data = await res.json();
+      showToast(`Document "${data.name}" added successfully (${data.chunk_count} chunks)`, 'success');
+      closeModal(el.pasteModal);
+      await fetchDocuments();
+      await fetchHealth();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
 
   async function sendMessage(contentOverride = null) {
     if (state.isGenerating) return;
 
-    const content = contentOverride ? contentOverride.trim() : el.composerInput.value.trim();
-    if (!content) return;
+    let content = contentOverride ? contentOverride.trim() : el.composerInput.value.trim();
+    const hasAttachments = state.attachedFiles.length > 0;
+
+    if (!content && !hasAttachments) return;
+
+    // If attachments present but no text, default to an analysis prompt
+    if (!content && hasAttachments) {
+      content = "Please analyze and summarize the attached document(s), highlighting key points, policies, and takeaways.";
+    }
 
     if (!state.currentChatId) {
       await createNewChat();
@@ -848,6 +947,30 @@
     // Switch view
     el.welcomeHero.classList.add('hidden');
     el.messagesContainer.classList.remove('hidden');
+
+    // If there are attached files, upload and index them first!
+    let attachedDocIds = [];
+    if (hasAttachments) {
+      const formData = new FormData();
+      state.attachedFiles.forEach(f => formData.append('files', f));
+      showToast(`Uploading and indexing ${state.attachedFiles.length} attached document(s)...`, 'info');
+      try {
+        const uploadRes = await fetch('/api/documents', {
+          method: 'POST',
+          body: formData
+        });
+        if (!uploadRes.ok) throw new Error('Attachment upload failed');
+        const uploadData = await uploadRes.json();
+        attachedDocIds = uploadData.documents.map(d => d.id);
+        await fetchDocuments();
+        await fetchHealth();
+      } catch (err) {
+        showToast(`Could not process attached file: ${err.message}`, 'error');
+        return;
+      }
+      state.attachedFiles = [];
+      renderComposerAttachments();
+    }
 
     // Append User Message to UI
     const tempUserMsg = {
@@ -893,10 +1016,14 @@
     let finalMsgId = null;
 
     try {
+      const targetDocScope = attachedDocIds.length > 0
+        ? attachedDocIds
+        : (state.selectedDocScope === 'all' ? null : state.selectedDocScope);
+
       const payload = {
         content: content,
         top_k: state.topK,
-        document_ids: state.selectedDocScope === 'all' ? null : state.selectedDocScope
+        document_ids: targetDocScope
       };
 
       const res = await fetch(`/api/chats/${state.currentChatId}/messages`, {
@@ -1088,7 +1215,7 @@
   function updateCharCounter() {
     const len = el.composerInput.value.length;
     el.charCounter.textContent = `${len} / 4000`;
-    el.btnSend.disabled = len === 0 || state.isGenerating;
+    el.btnSend.disabled = (len === 0 && state.attachedFiles.length === 0) || state.isGenerating;
   }
 
   function toggleSidebar() {
@@ -1255,6 +1382,44 @@
       if (e.key === 'Enter') saveRename();
     };
 
+    // Composer Attachment Button & File Input
+    el.btnAttachComposer.onclick = () => el.composerFileInput.click();
+    el.composerFileInput.onchange = (e) => {
+      if (e.target.files) {
+        Array.from(e.target.files).forEach(f => addComposerAttachment(f));
+      }
+      el.composerFileInput.value = '';
+    };
+
+    // Drag and drop onto Composer
+    el.composerBox.ondragover = (e) => {
+      e.preventDefault();
+      el.composerBox.classList.add('drag-over');
+    };
+    el.composerBox.ondragleave = (e) => {
+      e.preventDefault();
+      el.composerBox.classList.remove('drag-over');
+    };
+    el.composerBox.ondrop = (e) => {
+      e.preventDefault();
+      el.composerBox.classList.remove('drag-over');
+      if (e.dataTransfer && e.dataTransfer.files) {
+        Array.from(e.dataTransfer.files).forEach(f => addComposerAttachment(f));
+      }
+    };
+
+    // Paste Document Modal
+    el.btnOpenPasteModal.onclick = () => {
+      el.pasteDocTitle.value = '';
+      el.pasteDocContent.value = '';
+      openModal(el.pasteModal);
+      setTimeout(() => el.pasteDocTitle.focus(), 100);
+    };
+    el.btnClosePaste.onclick = () => closeModal(el.pasteModal);
+    el.btnPasteCancel.onclick = () => closeModal(el.pasteModal);
+    document.getElementById('paste-backdrop').onclick = () => closeModal(el.pasteModal);
+    el.btnPasteSave.onclick = savePastedDocument;
+
     // Global keyboard shortcuts
     window.addEventListener('keydown', (e) => {
       // Escape closes modals
@@ -1263,6 +1428,7 @@
         closeModal(el.settingsModal);
         closeModal(el.confirmModal);
         closeModal(el.renameModal);
+        closeModal(el.pasteModal);
         el.scopeMenu.classList.add('hidden');
       }
 

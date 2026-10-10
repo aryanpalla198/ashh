@@ -148,3 +148,20 @@ def test_chat_lifecycle_and_offline_message_streaming():
         # Verify chat is gone
         res_list_chats = client.get("/api/chats")
         assert len(res_list_chats.json()) == 0
+
+def test_raw_text_document_ingestion():
+    with TestClient(app) as client:
+        payload = {
+            "name": "Meeting Notes",
+            "content": "Ashh supports direct text and note ingestion alongside PDF files. It chunks and embeds text directly."
+        }
+        res = client.post("/api/documents/text", json=payload)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["name"] == "Meeting Notes"
+        assert data["page_count"] == 1
+        assert data["chunk_count"] >= 1
+
+        # Verify it shows up in document list
+        docs = client.get("/api/documents").json()
+        assert any(d["id"] == data["id"] for d in docs)

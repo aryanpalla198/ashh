@@ -139,6 +139,77 @@ def delete_document_and_chunks(doc_id: str) -> bool:
         pass
     return storage.delete_document(doc_id)
 
+def ingest_raw_text(text: str, name: str) -> Tuple[DocumentMetadata, bool]:
+    """
+    Ingests raw typed or pasted text directly as a document.
+    """
+    clean_text = text.strip()
+    if not clean_text:
+        raise ValueError("Text content cannot be empty.")
+    
+    file_bytes = clean_text.encode("utf-8")
+    file_hash = compute_file_hash(file_bytes)
+    
+    existing_doc = storage.get_document_by_hash(file_hash)
+    if existing_doc:
+        doc_meta = DocumentMetadata(
+            id=existing_doc["id"],
+            name=existing_doc["name"],
+            page_count=existing_doc["page_count"],
+            chunk_count=existing_doc["chunk_count"],
+            upload_time=existing_doc["upload_time"],
+            file_hash=existing_doc["file_hash"],
+            file_size_bytes=existing_doc.get("file_size_bytes", 0)
+        )
+        return doc_meta, True
+
+    doc_id = str(uuid.uuid4())
+    upload_time = datetime.now(timezone.utc).isoformat()
+    file_size_bytes = len(file_bytes)
+    
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=settings.chunk_size,
+        chunk_overlap=settings.chunk_overlap,
+        separators=["\n\n", "\n", ". ", "? ", "! ", " ", ""]
+    )
+    
+    chunks = splitter.split_text(clean_text)
+    chunk_ids: List[str] = []
+    chunk_texts: List[str] = []
+    chunk_metadatas: List[Dict[str, Any]] = []
+    
+    for idx, chunk in enumerate(chunks, start=1):
+        chunk_id = f"{doc_id}_c{idx}"
+        chunk_ids.append(chunk_id)
+        chunk_texts.append(chunk)
+        chunk_metadatas.append({
+            "document_id": doc_id,
+            "file_name": name,
+            "page": 1,
+            "chunk_index": idx
+        })
+        
+    if chunk_ids:
+        collection = get_collection()
+        collection.add(
+            ids=chunk_ids,
+            documents=chunk_texts,
+            metadatas=chunk_metadatas
+        )
+        
+    doc_meta = DocumentMetadata(
+        id=doc_id,
+        name=name,
+        page_count=1,
+        chunk_count=len(chunk_ids),
+        upload_time=upload_time,
+        file_hash=file_hash,
+        file_size_bytes=file_size_bytes
+    )
+    
+    storage.insert_document(doc_meta.model_dump())
+    return doc_meta, False
+
 def get_chunk_detail(chunk_id: str) -> Optional[Dict[str, Any]]:
     collection = get_collection()
     res = collection.get(ids=[chunk_id], include=["documents", "metadatas"])

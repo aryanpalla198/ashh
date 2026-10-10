@@ -1472,6 +1472,93 @@ html, body {
   background: var(--text-muted);
 }
 
+/* Paste Document Action in Sidebar */
+.btn-paste-action {
+  width: 100%;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background-color: var(--bg-hover);
+  border: 1px dashed var(--border-medium);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-paste-action:hover {
+  background-color: var(--bg-surface);
+  border-color: var(--color-accent-amber);
+  color: var(--color-accent-amber);
+}
+
+/* Composer Attachments Tray */
+.composer-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent-amber);
+  border: 1px solid rgba(198, 96, 63, 0.25);
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.attachment-chip-name {
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attachment-chip-size {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.attachment-chip-remove {
+  background: transparent;
+  border: none;
+  color: var(--color-accent-amber);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0 2px;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.attachment-chip-remove:hover {
+  color: var(--color-danger);
+}
+
+.composer-box.drag-over {
+  border-color: var(--color-accent-amber);
+  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+}
+
+.paste-textarea {
+  min-height: 140px;
+  resize: vertical;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
 /* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
