@@ -81,3 +81,6 @@ class HealthResponse(BaseModel):
     chunk_size: int
     chunk_overlap: int
     default_top_k: int
+
+class ApiKeyUpdate(BaseModel):
+    api_key: str

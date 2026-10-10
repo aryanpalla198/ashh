@@ -27,7 +27,8 @@ from app.schemas import (
     FeedbackRequest,
     ChunkDetailResponse,
     HealthResponse,
-    CitationItem
+    CitationItem,
+    ApiKeyUpdate
 )
 
 @asynccontextmanager
@@ -392,6 +393,36 @@ def health_check():
         chunk_overlap=settings.chunk_overlap,
         default_top_k=settings.top_k
     )
+
+@app.post("/api/config/key")
+def update_api_key(payload: ApiKeyUpdate):
+    """Updates the Anthropic API key in memory and persists to .env."""
+    key = payload.api_key.strip()
+    settings.anthropic_api_key = key if key else None
+    
+    # Persist to .env
+    env_path = PROJECT_ROOT / ".env"
+    if env_path.exists():
+        lines = env_path.read_text(encoding="utf-8").splitlines()
+        new_lines = []
+        found = False
+        for line in lines:
+            if line.startswith("ANTHROPIC_API_KEY="):
+                new_lines.append(f"ANTHROPIC_API_KEY={key}")
+                found = True
+            else:
+                new_lines.append(line)
+        if not found:
+            new_lines.append(f"ANTHROPIC_API_KEY={key}")
+        env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+    else:
+        env_path.write_text(f"ANTHROPIC_API_KEY={key}\nANTHROPIC_MODEL={settings.anthropic_model}\n", encoding="utf-8")
+        
+    return {
+        "status": "success",
+        "api_key_configured": bool(settings.anthropic_api_key),
+        "message": "Anthropic API key updated successfully." if key else "API key cleared. Running in Offline Mode."
+    }
 
 # -------------------------------------------------------------
 # Static Files & Frontend Routing

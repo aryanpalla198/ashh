@@ -341,6 +341,15 @@
         </div>
 
         <div class="settings-group">
+          <label for="setting-api-key" class="setting-label">
+            <span>Anthropic API Key</span>
+            <span id="api-key-status-badge" class="badge">Offline</span>
+          </label>
+          <input type="password" id="setting-api-key" class="text-input" placeholder="Paste your key (sk-ant-api03-...)" autocomplete="off">
+          <p class="setting-hint">Saved securely to <code>.env</code>. Leave blank to run in on-device Offline Mode.</p>
+        </div>
+
+        <div class="settings-group">
           <label class="setting-label">Runtime Engine Status</label>
           <div class="status-summary-card">
             <div class="status-summary-row">

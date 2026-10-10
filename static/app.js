@@ -107,6 +107,8 @@
     settingTopK: document.getElementById('setting-top-k'),
     settingTopKVal: document.getElementById('setting-top-k-val'),
     settingModelName: document.getElementById('setting-model-name'),
+    settingApiKey: document.getElementById('setting-api-key'),
+    apiKeyStatusBadge: document.getElementById('api-key-status-badge'),
     healthDbStatus: document.getElementById('health-db-status'),
     healthChromaStatus: document.getElementById('health-chroma-status'),
     healthApiStatus: document.getElementById('health-api-status'),
@@ -246,6 +248,22 @@
       el.healthApiStatus.textContent = data.api_key_configured ? 'Active (Claude)' : 'Offline (Extractive Mode)';
       el.healthChunksCount.textContent = data.chunk_count;
 
+      if (el.apiKeyStatusBadge) {
+        if (data.api_key_configured) {
+          el.apiKeyStatusBadge.textContent = 'Active (Live Claude)';
+          el.apiKeyStatusBadge.className = 'badge badge-accent';
+          if (el.settingApiKey) {
+            el.settingApiKey.placeholder = 'sk-ant-•••••••••••••••• (Configured)';
+          }
+        } else {
+          el.apiKeyStatusBadge.textContent = 'Offline';
+          el.apiKeyStatusBadge.className = 'badge';
+          if (el.settingApiKey) {
+            el.settingApiKey.placeholder = 'Paste your key (sk-ant-api03-...)';
+          }
+        }
+      }
+
       if (!data.api_key_configured) {
         el.statusLabel.textContent = 'Offline Mode';
         const dot = el.footerStatus.querySelector('.status-dot');
@@ -273,11 +291,33 @@
     }
   }
 
-  function saveSettings() {
+  async function saveSettings() {
     state.topK = parseInt(el.settingTopK.value, 10);
     localStorage.setItem('ashh_top_k', state.topK);
+
+    const enteredKey = el.settingApiKey ? el.settingApiKey.value.trim() : '';
+    if (enteredKey) {
+      try {
+        const res = await fetch('/api/config/key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: enteredKey })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Failed to update API key');
+        }
+        el.settingApiKey.value = '';
+        await fetchHealth();
+        showToast('API key updated! Claude live synthesis is now active.', 'success');
+      } catch (err) {
+        showToast(err.message || 'Error saving API key', 'error');
+      }
+    } else {
+      showToast('Settings saved', 'success');
+    }
+
     closeModal(el.settingsModal);
-    showToast('Settings saved', 'success');
   }
 
   function resetSettings() {
