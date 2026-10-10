@@ -1,0 +1,91 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 403 >>
+stream
+BT
+/F1 11 Tf
+50 740 Td
+14 TL
+(Ashh Corp Employee Handbook 2026) Tj
+T*
+(Welcome to Ashh! This handbook outlines company policies, benefits, and remote work guidelines.) Tj
+T*
+() Tj
+T*
+(Policy 1: Work Hours and Flexibility) Tj
+T*
+(Core collaboration hours are 10:00 AM to 3:00 PM Eastern Time.) Tj
+T*
+(Team members are free to structure their remaining hours according to their productivity rhythm.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 334 >>
+stream
+BT
+/F1 11 Tf
+50 740 Td
+14 TL
+(Policy 2: Health, Wellness and Annual Leave) Tj
+T*
+(Full-time employees receive 25 days of paid time off \(PTO\) annually.) Tj
+T*
+(Sick days are uncapped, and the company provides a $1,200 annual learning and wellness stipend.) Tj
+T*
+(Health insurance takes effect on your first day of employment.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+8 0 obj
+<< /Length 383 >>
+stream
+BT
+/F1 11 Tf
+50 740 Td
+14 TL
+(Policy 3: Security, Device Policies and Data Privacy) Tj
+T*
+(All work laptops must use full-disk encryption and multi-factor authentication \(MFA\).) Tj
+T*
+(Proprietary company documents must not be uploaded to unverified third-party public AI tools.) Tj
+T*
+(Local document RAG applications like Ashh keep document storage completely on-premises.) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 8 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000651 00000 n 
+0000000777 00000 n 
+0000001162 00000 n 
+0000001288 00000 n 
+0000001722 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+1848
+%%EOF

@@ -1,0 +1,99 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 569 >>
+stream
+BT
+/F1 11 Tf
+50 740 Td
+14 TL
+(Ashh Research Paper: Attention and Retrieval Augmented Generation) Tj
+T*
+(Author: Ashh AI Research Lab) Tj
+T*
+() Tj
+T*
+(Abstract: This paper presents modern methods in grounded question answering.) Tj
+T*
+(Retrieval Augmented Generation \(RAG\) significantly reduces model hallucinations by anchoring) Tj
+T*
+(responses in verified document chunks.) Tj
+T*
+(The system chunks incoming text into approximately 800 characters with 120 character overlaps.) Tj
+T*
+(Dense vector embeddings index every chunk in a vector store like ChromaDB.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 459 >>
+stream
+BT
+/F1 11 Tf
+50 740 Td
+14 TL
+(Section 2: Vector Space Search & Cosine Similarity) Tj
+T*
+(In ChromaDB, chunk embeddings are mapped onto a high-dimensional manifold.) Tj
+T*
+(When a query arrives, top-k chunks are selected based on nearest neighbor metrics.) Tj
+T*
+(Top-k defaults to 5 chunks, but can be configured between 1 and 10 chunks depending on context budget.) Tj
+T*
+(Document scoping enables users to constrain search strictly to specific files.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+8 0 obj
+<< /Length 452 >>
+stream
+BT
+/F1 11 Tf
+50 740 Td
+14 TL
+(Section 3: Verifiable Numbered Source Citations) Tj
+T*
+(Grounded models cite sources using bracketed tokens such as [1] and [2].) Tj
+T*
+(Every statement can be verified against the source text and exact page number.) Tj
+T*
+(When no documents are loaded, the system gracefully advises the user to upload reference material.) Tj
+T*
+(Offline extractive mode ensures uninterrupted operation even without cloud LLM keys.) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 8 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000817 00000 n 
+0000000943 00000 n 
+0000001453 00000 n 
+0000001579 00000 n 
+0000002082 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+2208
+%%EOF
