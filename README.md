@@ -199,9 +199,9 @@ To share your running Ashh instance with colleagues using a short link:
 # 1. Start a temporary public tunnel to localhost:8000
 cloudflared tunnel --url http://localhost:8000
 
-# 2. Copy the generated URL (e.g., https://patricia-pointer-deutsche-stick.trycloudflare.com)
+# 2. Copy the generated URL (e.g., https://submissions-atmosphere-genius-leo.trycloudflare.com)
 # 3. Create your custom Bitly short URL:
-#    Live Link: https://bit.ly/ashh-ai
+#    Live Link: https://submissions-atmosphere-genius-leo.trycloudflare.com
 ```
 
 ### 2. Deploying with Docker
