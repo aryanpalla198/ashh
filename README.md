@@ -199,8 +199,9 @@ To share your running Ashh instance with colleagues using a short link:
 # 1. Start a temporary public tunnel to localhost:8000
 cloudflared tunnel --url http://localhost:8000
 
-# 2. Copy the generated URL (e.g., https://random-name.trycloudflare.com)
-# 3. Paste into bitly.com to generate a short link (e.g., bit.ly/ashh-demo)
+# 2. Copy the generated URL (e.g., https://patricia-pointer-deutsche-stick.trycloudflare.com)
+# 3. Create your custom Bitly short URL:
+#    Live Link: https://bit.ly/ashh-ai
 ```
 
 ### 2. Deploying with Docker
@@ -227,10 +228,11 @@ Run the full automated test suite:
 pytest tests/ -v
 ```
 
-All 9 core tests verify:
+All 10 core tests verify:
 - PDF page extraction and chunk metadata preservation.
 - SHA-256 deduplication on identical uploads.
 - Rejection of invalid non-PDF and >25MB files.
+- Direct text pasting & typing ingestion.
 - Graceful handling of empty or scanned pages.
 - Scoped vector retrieval filtering.
 - Chat lifecycle (creation, renaming, deletion).
