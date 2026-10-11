@@ -1,46 +1,449 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="system">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Ashh — Document-Grounded AI Chatbot</title>
-  <meta http-equiv="refresh" content="0; url=https://path-geek-missile-keep.trycloudflare.com">
-  <script>
-    window.location.replace("https://path-geek-missile-keep.trycloudflare.com");
-  </script>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: #151513;
-      color: #edece6;
-      text-align: center;
-      padding: 20px;
-    }
-    .spinner {
-      width: 44px;
-      height: 44px;
-      border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: #d97352;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 24px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    h2 { font-size: 24px; margin-bottom: 8px; font-weight: 600; }
-    p { font-size: 15px; color: #9e9c94; max-width: 420px; line-height: 1.5; }
-    a { color: #d97352; text-decoration: none; font-weight: 600; }
-    a:hover { text-decoration: underline; }
-  </style>
+  <meta name="description" content="Ashh is a document-grounded AI assistant running locally with verifiable source citations and persistent vector retrieval.">
+  
+  <!-- Google Fonts: Newsreader (Display Serif) & Plus Jakarta Sans (Body Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Markdown parser, sanitizer, and PDF.js from cdnjs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <div class="spinner"></div>
-  <h2>Opening Ashh Document AI...</h2>
-  <p>Redirecting you to the live application. If it doesn't open automatically, <a href="https://path-geek-missile-keep.trycloudflare.com">click here to launch</a>.</p>
+  <div id="app" class="app-layout">
+    <!-- Sidebar backdrop for mobile -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+    <!-- Left Sidebar -->
+    <aside id="sidebar" class="sidebar" aria-label="Navigation and Documents">
+      <div class="sidebar-header">
+        <div class="brand">
+          <svg class="brand-monogram" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="32" height="32" rx="8" class="brand-bg" />
+            <path d="M16 6.5L9.5 24H12.8L14.4 19.5H17.6L19.2 24H22.5L16 6.5ZM15.2 16.8L16 14.2L16.8 16.8H15.2Z" fill="currentColor"/>
+            <circle cx="23" cy="9" r="2" fill="var(--color-accent-amber)" />
+          </svg>
+          <div class="brand-text">
+            <span class="brand-name">Ashh</span>
+            <span class="brand-sub">Document AI</span>
+          </div>
+        </div>
+        <button id="btn-close-sidebar" class="btn-icon mobile-only" aria-label="Close sidebar">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- New Chat Button -->
+      <div class="sidebar-actions">
+        <button id="btn-new-chat" class="btn-primary-action" aria-label="Start new chat (Ctrl+K)">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>New Chat</span>
+          <kbd class="kbd-shortcut">Ctrl K</kbd>
+        </button>
+      </div>
+
+      <!-- Search Chats -->
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="chat-search" placeholder="Search conversations..." aria-label="Search conversations">
+        <button id="btn-clear-search" class="btn-icon-sm hidden" aria-label="Clear search">✕</button>
+      </div>
+
+      <!-- Chat History List -->
+      <div class="sidebar-scrollable">
+        <div class="section-header">
+          <span>Conversations</span>
+        </div>
+        <div id="chat-list-container" class="chat-list-container">
+          <div id="chat-skeletons" class="skeleton-list">
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item"></div>
+          </div>
+          <div id="chat-empty-state" class="empty-state hidden">
+            <span>No conversations yet</span>
+          </div>
+          <div id="chat-search-empty" class="empty-state hidden">
+            <span>No matching chats</span>
+          </div>
+          <!-- Grouped Chats -->
+          <div id="group-today" class="chat-group hidden">
+            <div class="group-title">Today</div>
+            <div class="group-items"></div>
+          </div>
+          <div id="group-yesterday" class="chat-group hidden">
+            <div class="group-title">Yesterday</div>
+            <div class="group-items"></div>
+          </div>
+          <div id="group-earlier" class="chat-group hidden">
+            <div class="group-title">Earlier</div>
+            <div class="group-items"></div>
+          </div>
+        </div>
+
+        <!-- Documents Section -->
+        <div class="documents-section">
+          <div class="section-header">
+            <span>Documents</span>
+            <span id="doc-badge-count" class="badge">0</span>
+          </div>
+
+          <!-- Drag and Drop Upload Zone -->
+          <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Drag and drop PDF files or click to upload">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <div class="dropzone-text">
+              <strong>Upload PDFs</strong>
+              <span>Drop files here or click</span>
+            </div>
+            <input type="file" id="file-input" accept=".pdf" multiple class="sr-only">
+          </div>
+
+          <!-- Type or Paste Raw Text as Document -->
+          <button id="btn-open-paste-modal" class="btn-paste-action" type="button" aria-label="Type or paste document text">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            <span>+ Type / Paste Text</span>
+          </button>
+
+          <!-- Document List -->
+          <div id="document-list" class="document-list">
+            <div id="doc-skeletons" class="skeleton-list">
+              <div class="skeleton-item"></div>
+            </div>
+            <div id="doc-empty-state" class="empty-state">
+              <span>No documents uploaded</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="footer-status" id="footer-status" title="Connection status">
+          <span class="status-dot status-ok"></span>
+          <span id="status-label" class="status-label">Ready</span>
+        </div>
+        <div class="footer-buttons">
+          <button id="btn-theme-toggle" class="btn-icon" aria-label="Toggle light or dark theme" title="Toggle theme">
+            <svg id="theme-icon-sun" class="theme-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <svg id="theme-icon-moon" class="theme-icon hidden" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <button id="btn-settings" class="btn-icon" aria-label="Open Settings" title="Settings">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Chat Workspace -->
+    <main id="main-view" class="main-view">
+      <!-- Top Navigation Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="btn-toggle-sidebar" class="btn-icon" aria-label="Toggle navigation sidebar">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          
+          <div class="chat-title-wrapper">
+            <h1 id="chat-title-display" class="chat-title" title="Click to rename">New Chat</h1>
+            <button id="btn-rename-title" class="btn-icon-sm" aria-label="Rename conversation" title="Rename conversation">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Document Scoping Dropdown -->
+          <div class="scope-dropdown-container">
+            <button id="btn-scope-selector" class="btn-pill" aria-haspopup="true" aria-expanded="false" aria-label="Filter documents scope">
+              <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span id="scope-label">All Documents</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div id="scope-menu" class="dropdown-menu hidden" role="menu">
+              <div class="dropdown-header">Filter Scope</div>
+              <label class="dropdown-item checkbox-item">
+                <input type="radio" name="scope-mode" value="all" checked id="scope-radio-all">
+                <span>All uploaded documents</span>
+              </label>
+              <div class="dropdown-divider"></div>
+              <div id="scope-doc-checkboxes" class="scope-doc-list">
+                <span class="empty-hint">No documents to filter</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Export Button -->
+          <button id="btn-export-chat" class="btn-pill" aria-label="Export conversation as Markdown" title="Export as Markdown">
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span>Export</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Chat History Container -->
+      <section id="chat-area" class="chat-area" aria-label="Chat messages">
+        <!-- Welcome Screen (Visible on empty chat) -->
+        <div id="welcome-hero" class="welcome-hero">
+          <div class="welcome-card">
+            <div class="welcome-icon-box">
+              <svg viewBox="0 0 32 32" width="48" height="48" fill="none">
+                <rect width="32" height="32" rx="8" fill="var(--color-brand-surface)" />
+                <path d="M16 6.5L9.5 24H12.8L14.4 19.5H17.6L19.2 24H22.5L16 6.5ZM15.2 16.8L16 14.2L16.8 16.8H15.2Z" fill="var(--color-brand-primary)"/>
+                <circle cx="23" cy="9" r="2" fill="var(--color-accent-amber)" />
+              </svg>
+            </div>
+            <h2 class="welcome-heading">Hi, I'm Ashh.</h2>
+            <p class="welcome-sub">Upload a document and ask me anything about it.</p>
+            <p class="welcome-detail">
+              Every response is strictly grounded in your PDFs with verifiable numbered citations <span class="citation-chip-sample">[1]</span>.
+            </p>
+
+            <div class="welcome-prompts">
+              <button class="prompt-chip" data-prompt="What are the main topics and key conclusions in this document?">
+                <span>Summarize key conclusions</span>
+              </button>
+              <button class="prompt-chip" data-prompt="What specific policies or rules are detailed in the document?">
+                <span>Explain policies & guidelines</span>
+              </button>
+              <button class="prompt-chip" data-prompt="Can you give me an overview of the methodologies described?">
+                <span>Methodology overview</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages stream -->
+        <div id="messages-container" class="messages-container hidden"></div>
+      </section>
+
+      <!-- Composer Bar -->
+      <footer class="composer-container">
+        <form id="composer-form" class="composer-form">
+          <div class="composer-box" id="composer-box">
+            <!-- Attached File Badges Tray -->
+            <div id="composer-attachments" class="composer-attachments hidden"></div>
+
+            <textarea
+              id="composer-input"
+              rows="1"
+              placeholder="Ask a question, or attach a document & type your prompt... (Shift+Enter for newline)"
+              maxlength="4000"
+              aria-label="Message input"
+            ></textarea>
+            
+            <div class="composer-actions">
+              <div class="composer-meta">
+                <button
+                  type="button"
+                  id="btn-attach-composer"
+                  class="btn-icon"
+                  aria-label="Attach PDF file"
+                  title="Attach document to this question"
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                </button>
+                <input type="file" id="composer-file-input" accept=".pdf" multiple class="sr-only">
+
+                <span id="char-counter" class="char-counter">0 / 4000</span>
+                <span id="streaming-notice" class="streaming-notice hidden">Generating response...</span>
+              </div>
+              <div class="composer-buttons">
+                <button
+                  type="button"
+                  id="btn-stop-generating"
+                  class="btn-stop hidden"
+                  aria-label="Stop generation"
+                >
+                  <span class="stop-icon">■</span>
+                  <span>Stop</span>
+                </button>
+                <button
+                  type="submit"
+                  id="btn-send"
+                  class="btn-send"
+                  disabled
+                  aria-label="Send message"
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Citation Preview Modal -->
+  <div id="citation-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="citation-modal-title">
+    <div class="modal-backdrop" id="citation-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="citation-meta-header">
+          <span id="citation-badge" class="badge badge-accent">[1]</span>
+          <h3 id="citation-modal-title" class="modal-title">Document Source</h3>
+        </div>
+        <button id="btn-close-citation" class="btn-icon" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="citation-info-grid">
+          <div class="info-row">
+            <span class="info-label">Document:</span>
+            <span id="citation-doc-name" class="info-val">Document.pdf</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Page:</span>
+            <span id="citation-doc-page" class="info-val">1</span>
+          </div>
+        </div>
+        <div class="citation-text-wrapper">
+          <div class="citation-text-label">Full Chunk Text:</div>
+          <pre id="citation-text-content" class="citation-text"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-citation-copy" class="btn-secondary">Copy Excerpt</button>
+        <button id="btn-citation-done" class="btn-primary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+    <div class="modal-backdrop" id="settings-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="settings-modal-title" class="modal-title">Settings</h3>
+        <button id="btn-close-settings" class="btn-icon" aria-label="Close settings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-group">
+          <label for="setting-top-k" class="setting-label">
+            <span>Retrieved Chunks (Top-K)</span>
+            <span id="setting-top-k-val" class="slider-val">5</span>
+          </label>
+          <input type="range" id="setting-top-k" min="1" max="10" value="5" class="slider">
+          <p class="setting-hint">Higher values provide more context to the model, while lower values keep answers concise.</p>
+        </div>
+
+        <div class="settings-group">
+          <label class="setting-label">Active Model</label>
+          <input type="text" id="setting-model-name" class="input-readonly" readonly value="Loading...">
+          <p class="setting-hint">Configured via <code>ANTHROPIC_MODEL</code> in your backend <code>.env</code> file.</p>
+        </div>
+
+        <div class="settings-group">
+          <label for="setting-api-key" class="setting-label">
+            <span>Anthropic API Key</span>
+            <span id="api-key-status-badge" class="badge">Offline</span>
+          </label>
+          <input type="password" id="setting-api-key" class="text-input" placeholder="Paste your key (sk-ant-api03-...)" autocomplete="off">
+          <p class="setting-hint">Saved securely to <code>.env</code>. Leave blank to run in on-device Offline Mode.</p>
+        </div>
+
+        <div class="settings-group">
+          <label class="setting-label">Runtime Engine Status</label>
+          <div class="status-summary-card">
+            <div class="status-summary-row">
+              <span>Database (SQLite):</span>
+              <strong id="health-db-status">Checking...</strong>
+            </div>
+            <div class="status-summary-row">
+              <span>Vector Store (ChromaDB):</span>
+              <strong id="health-chroma-status">Checking...</strong>
+            </div>
+            <div class="status-summary-row">
+              <span>Anthropic Claude API:</span>
+              <strong id="health-api-status">Checking...</strong>
+            </div>
+            <div class="status-summary-row">
+              <span>Total Indexed Chunks:</span>
+              <strong id="health-chunks-count">0</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-reset-settings" class="btn-secondary">Reset to Defaults</button>
+        <button id="btn-save-settings" class="btn-primary">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Destructive Confirmation Modal -->
+  <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div class="modal-backdrop" id="confirm-backdrop"></div>
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-header">
+        <h3 id="confirm-modal-title" class="modal-title">Confirm Action</h3>
+        <button id="btn-close-confirm" class="btn-icon" aria-label="Cancel">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-modal-text">Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-confirm-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-confirm-proceed" class="btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Modal -->
+  <div id="rename-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rename-modal-title">
+    <div class="modal-backdrop" id="rename-backdrop"></div>
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-header">
+        <h3 id="rename-modal-title" class="modal-title">Rename Conversation</h3>
+        <button id="btn-close-rename" class="btn-icon" aria-label="Cancel">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="rename-input" class="text-input" placeholder="Enter conversation title" maxlength="120">
+      </div>
+      <div class="modal-footer">
+        <button id="btn-rename-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-rename-save" class="btn-primary">Save Title</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Type or Paste Document Modal -->
+  <div id="paste-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="paste-modal-title">
+    <div class="modal-backdrop" id="paste-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="paste-modal-title" class="modal-title">Type or Paste Document</h3>
+        <button id="btn-close-paste" class="btn-icon" aria-label="Cancel">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-group">
+          <label for="paste-doc-title" class="setting-label">Document Title</label>
+          <input type="text" id="paste-doc-title" class="text-input" placeholder="e.g. Project Specs, Meeting Notes, Contract Draft" maxlength="120">
+        </div>
+        <div class="settings-group">
+          <label for="paste-doc-content" class="setting-label">Content / Text</label>
+          <textarea id="paste-doc-content" class="text-input paste-textarea" rows="8" placeholder="Paste or type raw document text here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-paste-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-paste-save" class="btn-primary">Add Document</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Application script -->
+  <script src="./app.js"></script>
 </body>
 </html>
