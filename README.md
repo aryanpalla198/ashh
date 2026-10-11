@@ -5,6 +5,7 @@
 [![ChromaDB](https://img.shields.io/badge/VectorDB-ChromaDB-orange)](https://chromadb.com)
 [![Anthropic Claude](https://img.shields.io/badge/LLM-Anthropic%20Claude%203.5-purple?logo=anthropic&logoColor=white)](https://anthropic.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/aryanpalla198/ashh)
 
 **Ashh** is an end-to-end, document-grounded AI chatbot that runs locally and serves a modern, Claude-style interface in Google Chrome at `http://localhost:8000`. Ashh answers questions strictly using your uploaded PDF documents, providing interactive, numbered citations (`[1]`, `[2]`) that link directly to source passages.
 
