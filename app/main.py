@@ -434,6 +434,7 @@ STATIC_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.get("/")
+@app.head("/")
 def index():
     index_file = STATIC_DIR / "index.html"
     if index_file.exists():
